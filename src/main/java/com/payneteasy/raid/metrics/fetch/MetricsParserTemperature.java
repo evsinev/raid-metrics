@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 
-public class MetricsParser {
+public class MetricsParserTemperature implements IMetricParser {
 
-    private static final Logger LOG = LoggerFactory.getLogger( MetricsParser.class );
+    private static final Logger LOG = LoggerFactory.getLogger( MetricsParserTemperature.class );
 
     public List<Metric> parseMetrics(String aText) {
         LOG.info("Parsing\n{}", aText);

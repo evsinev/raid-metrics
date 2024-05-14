@@ -17,16 +17,16 @@ public class FetchMetricsTask implements Runnable {
 
     private static final Logger LOG = LoggerFactory.getLogger(FetchMetricsTask.class );
 
-    private final MetricsParser parser = new MetricsParser();
-
+    private final IMetricParser   parser;
     private final IProcessService processService;
-    private final MetricsStore store;
-    private final long         sleepMs;
-    private final String       program;
-    private final List<String> args;
-    private final File         workingDir;
+    private final MetricsStore    store;
+    private final long            sleepMs;
+    private final String          program;
+    private final List<String>    args;
+    private final File            workingDir;
 
-    public FetchMetricsTask(IProcessService processService, MetricsStore store, long sleepMs, String program, List<String> args, File workingDir) {
+    public FetchMetricsTask(IMetricParser parser, IProcessService processService, MetricsStore store, long sleepMs, String program, List<String> args, File workingDir) {
+        this.parser         = parser;
         this.processService = processService;
         this.store          = store;
         this.sleepMs        = sleepMs;

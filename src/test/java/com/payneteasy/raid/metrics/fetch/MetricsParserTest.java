@@ -26,8 +26,8 @@ public class MetricsParserTest {
 
     @Test
     public void test() {
-        MetricsParser parser = new MetricsParser();
-        List<Metric>  metrics = parser.parseMetrics(OUTPUT_1);
+        MetricsParserTemperature parser  = new MetricsParserTemperature();
+        List<Metric>             metrics = parser.parseMetrics(OUTPUT_1);
         System.out.println("metrics = " + metrics);
     }
 }

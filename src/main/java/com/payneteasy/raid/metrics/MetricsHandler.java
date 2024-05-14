@@ -10,27 +10,31 @@ import com.payneteasy.raid.metrics.fetch.MetricsStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class MetricsHandler implements IHttpRequestHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger( MetricsHandler.class );
 
-    private final MetricsStore store;
+    private final List<MetricsStore> stores;
 
-    public MetricsHandler(MetricsStore store) {
-        this.store = store;
+    public MetricsHandler(List<MetricsStore> stores) {
+        this.stores = stores;
     }
 
     @Override
     public HttpResponse handleRequest(HttpRequest aRequest) {
         StringBuilder sb = new StringBuilder();
-        for (Metric metric : store.getMetrics()) {
-            sb.append("raid_");
-            sb.append(metric.getName());
-            sb.append(" ");
-            sb.append(metric.getValue());
-            sb.append('\n');
+        for (MetricsStore store : stores) {
+            for (Metric metric : store.getMetrics()) {
+                sb.append("raid_");
+                sb.append(metric.getName());
+                sb.append(" ");
+                sb.append(metric.getValue());
+                sb.append('\n');
+            }
         }
         return HttpResponseBuilder.status(HttpResponseStatusLine.OK)
                 .addHeader("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
