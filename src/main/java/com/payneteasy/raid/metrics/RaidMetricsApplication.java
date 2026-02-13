@@ -8,6 +8,7 @@ import com.payneteasy.raid.metrics.fetch.FetchMetricsTask;
 import com.payneteasy.raid.metrics.fetch.MetricsParserShowAll;
 import com.payneteasy.raid.metrics.fetch.MetricsParserTemperature;
 import com.payneteasy.raid.metrics.fetch.MetricsStore;
+import com.payneteasy.raid.metrics.param.Param;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,16 +25,18 @@ public class RaidMetricsApplication {
 
     public static void main(String[] args) throws IOException {
 
-        MetricsStore        temperatureMetrics    = new MetricsStore();
-        MetricsStore        showAllMetrics    = new MetricsStore();
-        IHttpRequestHandler handler         = new MetricsHandler(List.of(temperatureMetrics, showAllMetrics));
-        ExecutorService     httpExecutor    = newFixedThreadPool(10);
-        ExecutorService     metricsExecutor = newFixedThreadPool(2);
-        ExecutorService     processExecutor = newSingleThreadExecutor();
-        IProcessService     processService  = new ProcessServiceImpl(processExecutor);
+        Param.logValues();
+
+        MetricsStore        temperatureMetrics = new MetricsStore();
+        MetricsStore        showAllMetrics     = new MetricsStore();
+        IHttpRequestHandler handler            = new MetricsHandler(List.of(temperatureMetrics, showAllMetrics));
+        ExecutorService     httpExecutor       = newFixedThreadPool(Param.HTTP_THREADS_COUNT.getIntValue());
+        ExecutorService     metricsExecutor    = newFixedThreadPool(Param.METRICS_THREADS_COUNT.getIntValue());
+        ExecutorService     processExecutor    = newSingleThreadExecutor();
+        IProcessService     processService     = new ProcessServiceImpl(processExecutor);
 
         HttpServer server = new HttpServer(
-                new InetSocketAddress(9093)
+                new InetSocketAddress(Param.METRICS_PORT.getIntValue())
                 , new HttpLoggerSlf4jImpl()
                 , httpExecutor
                 , handler
@@ -46,9 +49,10 @@ public class RaidMetricsApplication {
                         , processService
                         , temperatureMetrics
                         , Duration.ofMinutes(1).toMillis()
-                        , "/opt/MegaRAID/storcli/storcli64"
-                        , List.of("/c0", "show", "temperature", "nolog")
-                        , new File("/opt/MegaRAID/storcli")
+                        , Param.STORCLI64_BIN_PATH.getValue()
+                        , List.of(Param.SHOW_TEMPERATURE_DEVICE.getValue(), "show", "temperature", "nolog")
+                        , new File(Param.STORCLI64_WORKING_DIR.getValue())
+                        , "raid_show_temperature_exit_code"
                 )
         );
 
@@ -58,9 +62,10 @@ public class RaidMetricsApplication {
                         , processService
                         , showAllMetrics
                         , Duration.ofMinutes(1).toMillis()
-                        , "/opt/MegaRAID/storcli/storcli64"
-                        , List.of("/c0/v0", "show", "all", "nolog")
-                        , new File("/opt/MegaRAID/storcli")
+                        , Param.STORCLI64_BIN_PATH.getValue()
+                        , List.of(Param.SHOW_ALL_DEVICE.getValue(), "show", "all", "nolog")
+                        , new File(Param.STORCLI64_WORKING_DIR.getValue())
+                        , "raid_show_all_exit_code"
                 )
         );
 

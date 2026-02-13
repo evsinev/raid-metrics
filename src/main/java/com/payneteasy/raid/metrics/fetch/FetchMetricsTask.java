@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.lang.Thread.currentThread;
@@ -24,15 +25,17 @@ public class FetchMetricsTask implements Runnable {
     private final String          program;
     private final List<String>    args;
     private final File            workingDir;
+    private final String          metricExitCodeName;
 
-    public FetchMetricsTask(IMetricParser parser, IProcessService processService, MetricsStore store, long sleepMs, String program, List<String> args, File workingDir) {
-        this.parser         = parser;
-        this.processService = processService;
-        this.store          = store;
-        this.sleepMs        = sleepMs;
-        this.program        = program;
-        this.args           = args;
-        this.workingDir     = workingDir;
+    public FetchMetricsTask(IMetricParser parser, IProcessService processService, MetricsStore store, long sleepMs, String program, List<String> args, File workingDir, String metricExitCodeName) {
+        this.parser             = parser;
+        this.processService     = processService;
+        this.store              = store;
+        this.sleepMs            = sleepMs;
+        this.program            = program;
+        this.args               = args;
+        this.workingDir         = workingDir;
+        this.metricExitCodeName = metricExitCodeName;
     }
 
     @Override
@@ -63,12 +66,21 @@ public class FetchMetricsTask implements Runnable {
                 , workingDir
         ));
 
+        Metric metric = new Metric(metricExitCodeName, result.getExitCode());
+
         if (result.getExitCode() != 0) {
             LOG.error("Exit code is not 0 but was {}", result.getExitCode());
-            return emptyList();
+            return addMetrics(emptyList(), metric);
         }
 
-        return parser.parseMetrics(result.getOutput());
+        return addMetrics(parser.parseMetrics(result.getOutput()), metric);
+    }
+
+    private static List<Metric> addMetrics(List<Metric> metrics, Metric metric) {
+        List<Metric> newMetrics = new ArrayList<>(metrics.size() + 1);
+        newMetrics.addAll(metrics);
+        newMetrics.add(metric);
+        return newMetrics;
     }
 
 }
